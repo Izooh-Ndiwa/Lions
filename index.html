@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lions Heart Maili-Nne Senior Team - Management Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="authOverlay" class="overlay">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="crest">🦁</div>
+        <h1>Lions Heart Maili-Nne</h1>
+        <p class="subtle-caps">Senior Team Management Portal</p>
+      </div>
+
+      <form id="loginForm" class="stack" onsubmit="handleLogin(event)">
+        <div class="field">
+          <label for="loginRole">Select Your Role</label>
+          <select id="loginRole" onchange="updateLoginFields()">
+            <option value="manager">Head Manager / Coach</option>
+            <option value="player">Squad Player</option>
+            <option value="staff">Support Staff / Ball Boy</option>
+          </select>
+        </div>
+
+        <div id="playerSelectContainer" class="field hidden">
+          <label for="loginPlayerName">Select Player Name</label>
+          <select id="loginPlayerName"></select>
+        </div>
+
+        <div class="field">
+          <label for="loginPassword" id="passwordLabel">Manager Password</label>
+          <input type="password" id="loginPassword" required placeholder="Enter password">
+          
+        </div>
+
+        <div id="loginError" class="alert alert-error hidden"></div>
+
+        <button type="submit" class="btn btn-gold btn-block">Access Portal</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="mainApp" class="app hidden">
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo">🦁</div>
+        <div>
+          <h2>Lions Heart Maili-Nne</h2>
+          <p class="subtle-caps">Senior Team Hub</p>
+        </div>
+      </div>
+      <div class="user-box">
+        <div class="user-info">
+          <span id="navUserName" class="user-name">Manager</span>
+          <span id="navUserRoleBadge" class="role-badge">Full Access</span>
+        </div>
+        <button class="btn btn-dark" onclick="logout()">
+          <i class="fa-solid fa-right-from-bracket"></i> Switch Role
+        </button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button id="tab-dashboard" class="tab active" onclick="switchTab('dashboard')">
+        <i class="fa-solid fa-chart-pie"></i><span>Dashboard &amp; Metrics</span>
+      </button>
+      <button id="tab-calendar" class="tab" onclick="switchTab('calendar')">
+        <i class="fa-solid fa-calendar-days"></i><span>Coach Calendar &amp; Tap-Attendance</span>
+      </button>
+      <button id="tab-squad" class="tab" onclick="switchTab('squad')">
+        <i class="fa-solid fa-users"></i><span id="squadTabLabel">Squad Roster &amp; Sign-ins</span>
+      </button>
+      <button id="tab-settings" class="tab" onclick="switchTab('settings')">
+        <i class="fa-solid fa-gear"></i><span id="settingsTabLabel">Manager Settings</span>
+      </button>
+    </nav>
+
+    <main class="content">
+
+      <!-- TAB 1: DASHBOARD -->
+      <section id="content-dashboard" class="stack-lg">
+
+        <div class="banner">
+          <div>
+            <span class="pill">Official Senior Team Portal</span>
+            <h2 id="welcomeTitle" class="banner-title">Welcome Back, Coach</h2>
+            <p id="welcomeSubtitle" class="banner-sub">Monitor weekly progress, player attendance, motivation status, and training feedback.</p>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <span id="statSquadCount" class="stat-value gold">0</span>
+              <span class="stat-label">Active Squad</span>
+            </div>
+            <div class="stat">
+              <span id="statAttendanceRate" class="stat-value green">0%</span>
+              <span class="stat-label">Attendance</span>
+            </div>
+            <div class="stat">
+              <span id="statMorale" class="stat-value blue">0/5</span>
+              <span class="stat-label">Team Morale</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Player-only card -->
+        <div id="playerSpecificCard" class="card hidden">
+          <div class="card-head">
+            <h3><i class="fa-solid fa-id-badge"></i> My Player Performance Card</h3>
+            <span id="playerRolePositionBadge" class="pill pill-solid">FWD #10</span>
+          </div>
+          <div class="grid-3">
+            <div class="mini-card">
+              <span class="mini-label">Technical Rating</span>
+              <div class="mini-row"><span id="myTechRating" class="mini-value gold">0 / 5.0</span><i class="fa-solid fa-futbol gold"></i></div>
+            </div>
+            <div class="mini-card">
+              <span class="mini-label">Physical Conditioning</span>
+              <div class="mini-row"><span id="myPhysRating" class="mini-value green">0 / 5.0</span><i class="fa-solid fa-bolt green"></i></div>
+            </div>
+            <div class="mini-card">
+              <span class="mini-label">Tactical Awareness</span>
+              <div class="mini-row"><span id="myTacRating" class="mini-value blue">0 / 5.0</span><i class="fa-solid fa-chess-board blue"></i></div>
+            </div>
+          </div>
+          <div class="mini-card note-box">
+            <h4><i class="fa-solid fa-bullhorn"></i> Manager's Direct Instructions &amp; Feedback</h4>
+            <p id="myCoachNotes" class="italic"></p>
+          </div>
+        </div>
+
+        <div class="grid-dashboard">
+          <div class="card">
+            <div class="card-head">
+              <h3><i class="fa-solid fa-chart-line"></i> Weekly Training &amp; Match Attendance Trend</h3>
+              <span class="tag">Last 4 Weeks</span>
+            </div>
+            <div class="chart-wrap"><canvas id="attendanceChart"></canvas></div>
+          </div>
+
+          <div class="card card-column">
+            <div>
+              <h3 class="card-title"><i class="fa-solid fa-award"></i> Top Motivation Standings</h3>
+              <div id="topBadgesList" class="stack"></div>
+            </div>
+            <div class="card-foot">
+              <button class="btn btn-outline btn-block" onclick="switchTab('squad')">Manage Player Roster &amp; Badges</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: CALENDAR & TAP ATTENDANCE -->
+      <section id="content-calendar" class="stack-lg hidden">
+
+        <div class="card card-row">
+          <div>
+            <h3 class="section-title">Coach Calendar &amp; Tap Attendance</h3>
+            <p class="hint">Select any date (e.g. yesterday or today) to instantly tap and record player attendance on the ground.</p>
+          </div>
+          <button id="managerNewEventBtn" class="btn btn-gold" onclick="openNewEventModal()">
+            <i class="fa-solid fa-calendar-plus"></i> Schedule Activity / Match
+          </button>
+        </div>
+
+        <div class="grid-calendar">
+          <div class="card stack">
+            <div class="card-head">
+              <h4 class="gold-title"><i class="fa-solid fa-calendar-days"></i> Activity Calendar</h4>
+              <span class="tag">Tap Date to View</span>
+            </div>
+            <div id="calendarEventsList" class="stack scroll-y tall"></div>
+          </div>
+
+          <div class="card stack span-2">
+            <div class="card-head">
+              <div>
+                <span id="activeEventDateBadge" class="pill">Select a Date</span>
+                <h3 id="activeEventTitle" class="event-title">No Activity Selected</h3>
+              </div>
+              <span id="activeEventAttendanceCount" class="tag tag-dark">0 Attended</span>
+            </div>
+
+            <div id="tapInstructions" class="info-box">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Coach: Tap any player below to instantly record their presence for this session. Serious players accumulate high weekly points for team privileges!</span>
+            </div>
+
+            <div id="tapAttendanceGrid" class="grid-2 scroll-y short"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: SQUAD ROSTER -->
+      <section id="content-squad" class="stack-lg hidden">
+
+        <div class="card card-row">
+          <div>
+            <h3 class="section-title">Squad Roster &amp; Player Sign-ins</h3>
+            <p class="hint">Manager-controlled database of players, jersey numbers, login passwords, and ratings.</p>
+          </div>
+          <button id="managerAddPlayerBtn" class="btn btn-gold" onclick="openAddPlayerModal()">
+            <i class="fa-solid fa-user-plus"></i> Sign In New Player
+          </button>
+        </div>
+
+        <div class="card card-flush">
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Player Name</th>
+                  <th>Position</th>
+                  <th>Jersey</th>
+                  <th>Login Password</th>
+                  <th>Technical</th>
+                  <th>Physical</th>
+                  <th>Tactical</th>
+                  <th class="center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rosterTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: SETTINGS -->
+      <section id="content-settings" class="stack-lg hidden">
+        <div class="card stack-lg">
+          <div>
+            <h3 class="section-title">Manager Security &amp; Credentials</h3>
+            <p class="hint">Manage head coach account credentials and system settings.</p>
+          </div>
+
+          <div id="passwordSection" class="divider-top narrow stack">
+            <h4 class="gold-title">Change Manager Password</h4>
+            <form class="stack" onsubmit="handlePasswordChange(event)">
+              <div class="field">
+                <label for="currentPassInput">Current Password</label>
+                <input type="password" id="currentPassInput" required>
+              </div>
+              <div class="field">
+                <label for="newPassInput">New Password (Must start with "Willy")</label>
+                <input type="text" id="newPassInput" required placeholder="Willy...">
+              </div>
+              <div id="passwordChangeError" class="alert alert-error hidden"></div>
+              <div id="passwordChangeSuccess" class="alert alert-success hidden"></div>
+              <button type="submit" class="btn btn-gold">Update Password</button>
+            </form>
+          </div>
+
+          <p id="nonManagerNote" class="hint hidden">Only the Head Manager can change credentials. Ask the coach if you need a password reset.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD / EDIT PLAYER -->
+  <div id="playerModal" class="overlay modal hidden">
+    <div class="modal-card">
+      <h3 id="playerModalTitle" class="modal-title">Sign In New Player</h3>
+      <form id="playerForm" class="stack" onsubmit="savePlayer(event)">
+        <input type="hidden" id="editPlayerIndex" value="-1">
+
+        <div class="field">
+          <label for="modalPlayerName">Player Full Name</label>
+          <input type="text" id="modalPlayerName" required placeholder="e.g. Kevin Otieno">
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="modalPlayerPosition">Position</label>
+            <select id="modalPlayerPosition">
+              <option value="GK">Goalkeeper (GK)</option>
+              <option value="DEF">Defender (DEF)</option>
+              <option value="MID">Midfielder (MID)</option>
+              <option value="FWD" selected>Forward (FWD)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="modalPlayerJersey">Jersey Number</label>
+            <input type="number" id="modalPlayerJersey" required min="1" max="99" value="10">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="modalPlayerPassword">Login Password (Assigned by Manager)</label>
+          <input type="text" id="modalPlayerPassword" required placeholder="e.g. lion123">
+        </div>
+
+        <div class="grid-3">
+          <div class="field">
+            <label for="modalTech" class="small-label">Technical (1-5)</label>
+            <input type="number" id="modalTech" step="0.1" min="1" max="5" value="4.0">
+          </div>
+          <div class="field">
+            <label for="modalPhys" class="small-label">Physical (1-5)</label>
+            <input type="number" id="modalPhys" step="0.1" min="1" max="5" value="4.0">
+          </div>
+          <div class="field">
+            <label for="modalTac" class="small-label">Tactical (1-5)</label>
+            <input type="number" id="modalTac" step="0.1" min="1" max="5" value="4.0">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="modalPlayerBadge">Motivation Badge / Status</label>
+          <select id="modalPlayerBadge">
+            <option value="⭐ Man of the Match">⭐ Man of the Match</option>
+            <option value="⚡ Hardest Worker">⚡ Hardest Worker</option>
+            <option value="🧠 Tactical Master">🧠 Tactical Master</option>
+            <option value="🛡️ Defensive Rock">🛡️ Defensive Rock</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="modalPlayerNotes">Coach Instructions &amp; Feedback</label>
+          <textarea id="modalPlayerNotes" rows="2" placeholder="Direct guidance for player...">Keep up the high work rate in training.</textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-dark" onclick="closePlayerModal()">Cancel</button>
+          <button type="submit" class="btn btn-gold">Save Player</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SCHEDULE EVENT -->
+  <div id="eventModal" class="overlay modal hidden">
+    <div class="modal-card">
+      <h3 class="modal-title">Schedule Activity / Match</h3>
+      <form id="eventForm" class="stack" onsubmit="saveNewEvent(event)">
+        <div class="field">
+          <label for="modalEventTitle">Activity Title</label>
+          <input type="text" id="modalEventTitle" required placeholder="e.g. Morning Conditioning &amp; Passing Drill">
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="modalEventType">Activity Type</label>
+            <select id="modalEventType">
+              <option value="Training">Training Practice</option>
+              <option value="Match">Official Match</option>
+              <option value="Tactical">Tactical Briefing</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="modalEventDate">Date</label>
+            <input type="date" id="modalEventDate" required>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-dark" onclick="closeEventModal()">Cancel</button>
+          <button type="submit" class="btn btn-gold">Add to Calendar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <link rel="stylesheet" href="style.css">
+</body>
+</html>
